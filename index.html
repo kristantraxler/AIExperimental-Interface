@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Behavioral Analysis System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .main-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .camera-container {
+            width: 100%;
+            max-width: 640px;
+            margin: 20px auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 480px;
+            background: #666;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        .setup-phase {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            margin: 10px;
+            padding: 8px 15px;
+            border-radius: 15px;
+            background: #f0f0f0;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .active {
+            background: #4CAF50;
+        }
+
+        #startButton {
+            display: none;
+            margin: 20px auto;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #startButton:hover {
+            background: #1976D2;
+        }
+
+        #timer {
+            display: none;
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .recording-status, .metrics-grid, .system-log {
+            display: none;
+        }
+
+        /* Original styles remain the same */
+        .recording-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .status-dot.pulse {
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .metric-box {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .system-log {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            height: 100px;
+            overflow-y: auto;
+        }
+
+        #logContent {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>AI Behavioral Analysis System</h1>
+            <p>System Setup and Calibration</p>
+        </div>
+
+        <div class="setup-phase" id="setupPhase">
+            <div class="status-indicator">
+                <span class="status-dot" id="videoStatus"></span>
+                Video Input
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot" id="audioStatus"></span>
+                Audio Input
+            </div>
+        </div>
+
+        <div class="camera-container" id="cameraContainer">
+            <video id="videoElement" autoplay playsinline></video>
+        </div>
+
+        <button id="startButton">Start 2-Minute Evaluation</button>
+        <div id="timer">2:00</div>
+
+        <!-- Original metrics and log sections -->
+        <div class="recording-status">
+            <div class="status-dot pulse"></div>
+            <strong>System Active - Recording in Progress</strong>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-label">Analysis Confidence</div>
+                <div class="metric-value" id="confidenceValue">98.2%</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Features Tracked</div>
+                <div class="metric-value" id="featuresValue">247</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Processing Rate</div>
+                <div class="metric-value" id="processingValue">60 fps</div>
+            </div>
+        </div>
+
+        <div class="system-log">
+            <ul id="logContent">
+                <li class="log-entry">[System] Analysis session initialized</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoElement = document.getElementById('videoElement');
+            const startButton = document.getElementById('startButton');
+            const timer = document.getElementById('timer');
+            const videoStatus = document.getElementById('videoStatus');
+            const audioStatus = document.getElementById('audioStatus');
+            const setupPhase = document.getElementById('setupPhase');
+            const cameraContainer = document.getElementById('cameraContainer');
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    videoElement.srcObject = stream;
+                    videoStatus.classList.add('active');
+                    audioStatus.classList.add('active');
+                    startButton.style.display = 'block';
+                })
+                .catch(function(err) {
+                    console.log("Camera access error: " + err);
+                });
+
+            // Timer functionality
+            startButton.addEventListener('click', function() {
+                // Hide camera and setup
+                setupPhase.style.display = 'none';
+                cameraContainer.style.display = 'none';
+                startButton.style.display = 'none';
+                
+                // Show timer and metrics
+                timer.style.display = 'block';
+                document.querySelector('.recording-status').style.display = 'flex';
+                document.querySelector('.metrics-grid').style.display = 'grid';
+                document.querySelector('.system-log').style.display = 'block';
+                
+                // Start countdown
+                let timeLeft = 120; // 2 minutes in seconds
+                let countdownTimer = setInterval(function() {
+                    timeLeft--;
+                    let minutes = Math.floor(timeLeft / 60);
+                    let seconds = timeLeft % 60;
+                    timer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownTimer);
+                        timer.textContent = "Evaluation Complete";
+                    }
+                }, 1000);
+
+                // Start the original metrics updates
+                startMetricUpdates();
+            });
+
+            // Original metric update functions
+            function startMetricUpdates() {
+                function updateMetrics() {
+                    const confidence = (95 + Math.random() * 4).toFixed(1);
+                    document.getElementById('confidenceValue').textContent = confidence + '%';
+
+                    const features = Math.floor(240 + Math.random() * 15);
+                    document.getElementById('featuresValue').textContent = features;
+
+                    const rate = Math.floor(58 + Math.random() * 4);
+                    document.getElementById('processingValue').textContent = rate + ' fps';
+                }
+
+                function addLogEntry() {
+                    const logs = [
+                        "Behavioral pattern analysis running",
+                        "Movement tracking active",
+                        "Updating feature recognition",
+                        "Processing participant data",
+                        "Running sentiment analysis",
+                        "Updating behavioral metrics"
+                    ];
+                    
+                    const log = logs[Math.floor(Math.random() * logs.length)];
+                    const time = new Date().toLocaleTimeString();
+                    const logContent = document.getElementById('logContent');
+                    
+                    const entry = document.createElement('li');
+                    entry.className = 'log-entry';
+                    entry.textContent = `[${time}] ${log}`;
+                    
+                    logContent.appendChild(entry);
+                    
+                    while (logContent.children.length > 8) {
+                        logContent.removeChild(logContent.firstChild);
+                    }
+                    
+                    const systemLog = document.querySelector('.system-log');
+                    systemLog.scrollTop = systemLog.scrollHeight;
+                }
+
+                setInterval(updateMetrics, 2000);
+                setInterval(addLogEntry, 3000);
+                
+                // Run initial updates
+                updateMetrics();
+                addLogEntry();
+            }
+        });
+    </script>
+</body>
+</html>
