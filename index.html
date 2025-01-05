@@ -38,7 +38,7 @@
             width: 100%;
             height: 480px;
             background: #666;
-            transform: scaleX(-1); /* Mirror effect */
+            transform: scaleX(-1);
         }
 
         .setup-phase {
@@ -82,7 +82,7 @@
             background: #1976D2;
         }
 
-        #timer {
+        #completionMessage {
             display: none;
             font-size: 24px;
             text-align: center;
@@ -192,7 +192,7 @@
         </div>
 
         <button id="startButton">Start 2-Minute Evaluation</button>
-        <div id="timer"></div>
+        <div id="completionMessage"></div>
 
         <div class="recording-status">
             <div class="status-dot pulse"></div>
@@ -225,13 +225,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             const videoElement = document.getElementById('videoElement');
             const startButton = document.getElementById('startButton');
-            const timer = document.getElementById('timer');
+            const completionMessage = document.getElementById('completionMessage');
             const videoStatus = document.getElementById('videoStatus');
             const audioStatus = document.getElementById('audioStatus');
             const setupPhase = document.getElementById('setupPhase');
             const cameraContainer = document.getElementById('cameraContainer');
             
-            // Request camera access
             navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(function(stream) {
                     videoElement.srcObject = stream;
@@ -243,38 +242,24 @@
                     console.log("Camera access error: " + err);
                 });
 
-            // Timer functionality
             startButton.addEventListener('click', function() {
-                // Hide camera and setup
                 setupPhase.style.display = 'none';
                 cameraContainer.style.display = 'none';
                 startButton.style.display = 'none';
                 
-                // Show metrics
                 document.querySelector('.recording-status').style.display = 'flex';
                 document.querySelector('.metrics-grid').style.display = 'grid';
                 document.querySelector('.system-log').style.display = 'block';
                 
-                // Start hidden countdown
-                let timeLeft = 120; // 2 minutes in seconds
-                let countdownTimer = setInterval(function() {
-                    timeLeft--;
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(countdownTimer);
-                        timer.textContent = "Evaluation Complete";
-                        timer.style.display = 'block'; // Show completion message
-                    }
-                }, 1000);
+                // Silent countdown - no visible timer
+                setTimeout(function() {
+                    completionMessage.textContent = "Evaluation Complete";
+                    completionMessage.style.display = 'block';
+                }, 120000); // 2 minutes in milliseconds
 
-                // Hide timer during countdown
-                timer.style.display = 'none';
-
-                // Start the metrics updates
                 startMetricUpdates();
             });
 
-            // Metric update functions
             function startMetricUpdates() {
                 function updateMetrics() {
                     const confidence = (95 + Math.random() * 4).toFixed(1);
@@ -318,7 +303,6 @@
                 setInterval(updateMetrics, 2000);
                 setInterval(addLogEntry, 3000);
                 
-                // Run initial updates
                 updateMetrics();
                 addLogEntry();
             }
