@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
+<!-- Previous head and style sections remain exactly the same -->
 <head>
     <title>AI Behavioral Analysis System</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* All previous styles remain exactly the same */
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -230,6 +232,8 @@
             const audioStatus = document.getElementById('audioStatus');
             const setupPhase = document.getElementById('setupPhase');
             const cameraContainer = document.getElementById('cameraContainer');
+            let metricsInterval;
+            let logInterval;
             
             navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(function(stream) {
@@ -251,13 +255,25 @@
                 document.querySelector('.metrics-grid').style.display = 'grid';
                 document.querySelector('.system-log').style.display = 'block';
                 
+                // Start updates
+                const { metricsInt, logInt } = startMetricUpdates();
+                metricsInterval = metricsInt;
+                logInterval = logInt;
+                
                 // Silent countdown - no visible timer
                 setTimeout(function() {
                     completionMessage.textContent = "Evaluation Complete";
                     completionMessage.style.display = 'block';
-                }, 120000); // 2 minutes in milliseconds
-
-                startMetricUpdates();
+                    
+                    // Stop all updates
+                    clearInterval(metricsInterval);
+                    clearInterval(logInterval);
+                    
+                    // Hide the recording status and metrics
+                    document.querySelector('.recording-status').style.display = 'none';
+                    document.querySelector('.metrics-grid').style.display = 'none';
+                    document.querySelector('.system-log').style.display = 'none';
+                }, 120000); // 2 minutes
             });
 
             function startMetricUpdates() {
@@ -300,11 +316,14 @@
                     systemLog.scrollTop = systemLog.scrollHeight;
                 }
 
-                setInterval(updateMetrics, 2000);
-                setInterval(addLogEntry, 3000);
+                const metricsInt = setInterval(updateMetrics, 2000);
+                const logInt = setInterval(addLogEntry, 3000);
                 
+                // Run initial updates
                 updateMetrics();
                 addLogEntry();
+                
+                return { metricsInt, logInt };
             }
         });
     </script>
