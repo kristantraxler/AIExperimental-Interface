@@ -88,13 +88,13 @@
             text-align: center;
             margin: 20px 0;
             font-weight: bold;
+            color: #2c3e50;
         }
 
         .recording-status, .metrics-grid, .system-log {
             display: none;
         }
 
-        /* Original styles remain the same */
         .recording-status {
             display: flex;
             align-items: center;
@@ -192,9 +192,8 @@
         </div>
 
         <button id="startButton">Start 2-Minute Evaluation</button>
-        <div id="timer">2:00</div>
+        <div id="timer"></div>
 
-        <!-- Original metrics and log sections -->
         <div class="recording-status">
             <div class="status-dot pulse"></div>
             <strong>System Active - Recording in Progress</strong>
@@ -251,31 +250,31 @@
                 cameraContainer.style.display = 'none';
                 startButton.style.display = 'none';
                 
-                // Show timer and metrics
-                timer.style.display = 'block';
+                // Show metrics
                 document.querySelector('.recording-status').style.display = 'flex';
                 document.querySelector('.metrics-grid').style.display = 'grid';
                 document.querySelector('.system-log').style.display = 'block';
                 
-                // Start countdown
+                // Start hidden countdown
                 let timeLeft = 120; // 2 minutes in seconds
                 let countdownTimer = setInterval(function() {
                     timeLeft--;
-                    let minutes = Math.floor(timeLeft / 60);
-                    let seconds = timeLeft % 60;
-                    timer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                     
                     if (timeLeft <= 0) {
                         clearInterval(countdownTimer);
                         timer.textContent = "Evaluation Complete";
+                        timer.style.display = 'block'; // Show completion message
                     }
                 }, 1000);
 
-                // Start the original metrics updates
+                // Hide timer during countdown
+                timer.style.display = 'none';
+
+                // Start the metrics updates
                 startMetricUpdates();
             });
 
-            // Original metric update functions
+            // Metric update functions
             function startMetricUpdates() {
                 function updateMetrics() {
                     const confidence = (95 + Math.random() * 4).toFixed(1);
